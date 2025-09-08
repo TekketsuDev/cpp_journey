@@ -7,10 +7,12 @@ tags:
 ---
 # Resources 
 - [ ] [C++ Standard Template Library (STL) - GeeksforGeeks](https://www.geeksforgeeks.org/cpp/the-c-standard-template-library-stl/)
-
-# 
+- [ ] [STL Function Usage](https://learn.microsoft.com/es-es/troubleshoot/developer/visualstudio/cpp/libraries/use-priority-queue-stl-function)
+- [ ] [Dynamic Casting C++ Implementation](https://www.learncpp.com/cpp-tutorial/dynamic-casting/)
+- [ ] [LibCurl Application C++](https://dev.to/secure_daily/using-libcurl-in-c-c-application-4668)
+- [ ] [Cororutines C++20](https://en.cppreference.com/w/cpp/language/coroutines.html)
+- [ ] [Templates](https://www.geeksforgeeks.org/cpp/templates-cpp/)
 # Understand a Class Implementation
-
 
 ```c++
 class Animal
@@ -53,21 +55,10 @@ class Dog :public Animal {
 
 
 To undestanding purposes we simulate a class behabiour in C but in reality these key point are the one followed by c++ to create a class
+
 >[!done] Memory Layout  
->- [ ] Data Members of Animals comes first in the memory layout so this enable safe upcasting Dog* --> Animal* via Pointer Reinterpretation
 
->[!tldr] Pointer Reinterpretation
-```c++
-	#include <iostream>
-	
-	int main() {
-		int* p = new(22);
-	# T* new_ptr = reinterpret_cast<T*>(old_ptr);
-		char* ch = reinterpret_cast<char*>(p);
-	}
-```  
->- [ ] Data Members of Animals comes first in the memory layout so this enable safe upcasting Dog* --> Animal* via Pointer Reinterpretation
-
+- [ ] Data Members of Animals comes first in the memory layout so this enable safe upcasting Dog* --> Animal* via Pointer Reinterpretation
 - [x] A pointer to a derived object (Dog*) cast to a pointer to its (Animal*)  
 - [x] Each object has a hidden vptr
 - [x] For the base part Dog* and Animal* points to the same memory address for the core part
@@ -121,3 +112,131 @@ void Dog_init(Dog* d) {
     d->base.vptr = &dog_vtable;
 }
 ```
+
+# *Type Castsing*
+
+## Types
+### Implicit Casting
+The operation is entirely made by the compiler
+```c
+double d{ 3 }; // int value 3 implicitly converted to type double
+d = 6; // int value 6 implicitly converted to type double
+```
+![[65ce73a84554f_type_casting_in_c_3 1.webp]]
+
+
+### Explicit Casting
+The program must define when this is going to happen
+
+```c
+C style cast
+ div = (double)a / b;
+
+```
+
+ ### RTTI (Run-Time Type Information) in C++
+ RTTI exposes info about the object's data type at runtime and is available only for the classes which have at least one virtual function. This allows these two kind of casting
+- **Upcasting**: When a pointer or a reference of a derived class object is treated as a base class pointer.
+- **Downcasting**: When a base class pointer or reference is converted to a derived class pointer.
+
+## Named cast Operators
+
+### *static cast - Pointer Reinterpretation*
+Performs compile-time type conversion used mainly for explicit conversions considered safe by the compiler
+```c++
+T* var_name = static_cast <new_type>(expr);
+```
+```c 
+include <iostream>
+
+int main(void) {
+	double numd = static_cast<double>(n);
+	std::cout << typeid(n).name()
+}
+```
+Static cast uses direct initialization any explicit constructors of the target class type will be considered when initializing the temporary object to be returned
+- [More Info]([14.16 — Converting constructors and the explicit keyword – Learn C++](https://www.learncpp.com/cpp-tutorial/converting-constructors-and-the-explicit-keyword/))
+### *dynamic cast - Downcasting*
+Converting a pointer/reference of a base class to a derived class, ensures type safety by runtime type check
+```c++
+	dynamic_cast <new_type> (exp);
+	#return value NULL POINTER or 0 if failed
+```
+
+/home/tekketsu/cplus_journey/pointers_cast/rtti.cpp:18:12: error: cannot ‘dynamic_cast’ ‘b’ (of type ‘class B*’) to type ‘class D*’ (source type is not polymorphic)
+   18❌   D* d = dynamic_cast<D*>(b); // Derived class pointer
+	               ^~~~~~~~~~~~~~~~~~~
+
+### *reinterpret cast - Pointer Reinterpretation*
+
+Uncheck and dangerous pointer conversion to any type. Non portable-product. 
+```c 
+T* new_ptr = reinterpret_cast<T*>(old_ptr);
+```
+```c++
+	#include <iostream>
+	
+	int main() {
+		int* p = new(22);
+		char* ch = reinterpret_cast<char*>(p);
+		
+		
+		bool* n = reinterpret_cast<bool*>(ch);
+		cout << *n << endl;
+	}
+```
+### const_cast 
+
+>[!warning] **Regla de oro** para usar const_cast
+>- **Permitido:** quitar `const` y **modificar** si el objeto original **no** fue declarado `const`.
+>- **UB (comportamiento indefinido):** modificar un objeto que **fue declarado `const`** desde el inicio, aunque le quites `const`.
+```c++
+struct Foo {
+	int i;
+	Foo(): i(3) {} 
+		//Foo constructor with member initializer
+		# : i(3) stands for a default value if its not override it by the call to the constructor
+		# i{3} protege la variable de narrowing al intentar setear un valor no valido narrow checking	
+	void f(int v) const
+	{
+	    const_cast<Foo*>(this)->i = v; // OK as long as the type object isn't const
+	}
+}    
+int main() {
+    Foo f; 
+	f.i = 5; //❌ No se puede realizar ya es un const
+    const_cast<int&>(f.i);
+}
+```
+>[!warning] No confundir con bound checking
+> Este se aplica en tiempo de ejecucion si accedo a una variable fuera del rango de un contenedor ejemplo `std::vector`
+```c++
+	#Ejemplo 
+	std::vector<int> v = {1,2,3};
+	try {
+	    int x = v.at(5);
+	} catch (const std::out_of_range& e) {
+		// v.at(i): Comprueba si i < v.size(), size() devuelve `std::out_of_range`
+	}
+	int y = v[5]; ⚠️
+	// OJO CUIDAO puede empezar a leer basura ya que se encuentra fuera del rango
+	
+```
+### C-style casts
+Casting done via the **operator()** *var_name*. Still used in C code
+```c
+std::cout << (double)x / y << '\n';
+```
+Casting via the **function-style** 
+```c
+std::cout << double(x) / y << '\n';
+```
+A C-style cast tries to perform the following C++ casts, in order:
+- **`const_cast`** *(not recommeded to use)*
+- **`static_cast`** 
+- **`static_cast`**, followed by **`const_cast`**
+- **`reinterpret_cast`**
+- **`reinterpret_cast`**, followed by **`const_cast`**
+
+## *class* `or` *struct* = **default** ?
+This 
