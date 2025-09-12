@@ -42,7 +42,6 @@ class Dog :public Animal {
 			std::cout << "Only BARK BARK";
 		}
 }
-
 ```
 ### Memory Layout
 ```c
@@ -352,3 +351,7 @@ int list_num {};
 ---
 # Operators
 
+**<<** insertion operator for `std::cout` 
+
+> [!success] Best practice
+Prefer \n over std::endl when outputting text to the console.
